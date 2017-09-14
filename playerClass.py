@@ -5,13 +5,9 @@ class Player:
 		self.x = float(x)
 		self.y = float(y)
 
-	def moveUp(self, s):
+	def moveV(self, s):
 		self.y -= s
-	def moveDown(self, s):
-		self.y += s	
-	def moveLeft(self, s):
-		self.x -= s
-	def moveRight(self, s):
+	def moveH(self, s):
 		self.x += s
 
 class Enemy(Player):

@@ -9,7 +9,7 @@ pygame.display.flip()
 player = playerClass.Player(10,10)
 enemy = playerClass.Enemy(40,50)
 
-ruleset = rules.Ruleset(50,0.5,0.5)
+ruleset = rules.Ruleset(50,0.9,0.5)
 ruleset.initiliseSet()
 
 running = True
@@ -19,13 +19,13 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
 	        if event.key == pygame.K_LEFT:
-	            player.moveLeft(10)
+	            player.moveH(-10)
 	        if event.key == pygame.K_RIGHT:
-	            player.moveRight(10)
+	            player.moveH(10)
 	        if event.key == pygame.K_UP:
-	            player.moveUp(10)
+	            player.moveV(10)
 	        if event.key == pygame.K_DOWN:
-	            player.moveDown(10)
+	            player.moveV(-10)
 
     screen.fill((50,100,200))
 
@@ -33,7 +33,6 @@ while running:
     ruleset.GA()
     if len(ruleset.rules) > len(ruleset.rules):
     	ruleset.remove()
-    print len(ruleset.rules)
 
     if enemy.x<0 or enemy.x > 300:
     	enemy.x = 150

@@ -20,46 +20,57 @@ class Ruleset:
 		self.createRule()
 		self.createRule()
 
+	def matchRules(self, xDist, yDist):
+		matched = []
+
+		for rule in self.rules:
+			xMatch = False
+			yMatch = False
+			if (rule.xop == -1 and xDist < rule.xs) or \
+			(rule.xop == 0 and xDist == rule.xs) or\
+			(rule.xop == 1 and xDist > rule.xs):
+				xMatch == True
+			if (rule.yop == -1 and yDist < rule.ys) or \
+			(rule.yop == 0 and yDist == rule.ys) or\
+			(rule.yop == 1 and yDist > rule.ys):
+				yMatch == True
+			if xMatch and yMatch:
+				matched.append(rule)
+
+		return matched
+
+	def rulesVote(self, matchSet):
+		# [x, y]
+		vec = [0,0]
+		for rule in matchSet:
+			if rule.outVal < 0:
+				vec[rule.outAxis] -= 1
+			else:
+				vec[rule.outAxis] += 1
+
+		return vec
+
 	def actionRules(self, player, enemy):
 		for rule in self.rules:
 			xDist = enemy.getXDistTo(player)
 			yDist = enemy.getYDistTo(player)
 			dist = enemy.getDistTo(player)
 
-			if rule.xop == -1 and xDist < rule.xs:
-				if rule.outAxis == 0:
-					enemy.moveLeft(rule.outVal)
-				else:
-					enemy.moveRight(rule.outVal)
-			if rule.xop == 0 and xDist == rule.xs:
-				if rule.outAxis == 0:
-					enemy.moveLeft(rule.outVal)
-				else:
-					enemy.moveRight(rule.outVal)
-			if rule.xop == 1 and xDist > rule.xs:
-				if rule.outAxis == 0:
-					enemy.moveLeft(rule.outVal)
-				else:
-					enemy.moveRight(rule.outVal)
+			matchSet = self.matchRules(xDist, yDist)
+			actionVec = self.rulesVote(matchSet)
 
-			if rule.yop == -1 and yDist < rule.ys:
-				if rule.outAxis == 0:
-					enemy.moveUp(rule.outVal)
-				else:
-					enemy.moveDown(rule.outVal)
-			if rule.yop == 0 and yDist == rule.ys:
-				if rule.outAxis == 0:
-					enemy.moveUp(rule.outVal)
-				else:
-					enemy.moveDown(rule.outVal)
-			if rule.yop == 1 and yDist > rule.ys:
-				if rule.outAxis == 0:
-					enemy.moveUp(rule.outVal)
-				else:
-					enemy.moveDown(rule.outVal)
+			# add movements
+			if actionVec[0] < 0:
+				enemy.moveH(-10)
+			elif actionVec[0] > 0:
+				enemy.moveH(10)
+			if actionVec[1] < 0:
+				enemy.moveV(-10)
+			elif actionVec[1] > 0:
+				enemy.moveV(10)
 
 			if enemy.getDistTo(player) > dist:
-				rule.fitness += 5
+				rule.fitness += 1
 			else:
 				rule.fitness -= 1
 			if rule.fitness <= 0:
@@ -69,15 +80,17 @@ class Ruleset:
 		randIndex = randrange(1,len(self.rules))
 		if len(self.rules) <= self.limit:
 			rule1 = self.rules[randIndex]
-			if 1/(rule1.fitness) < self.pMutate:
+			if 1/(randIndex*rule1.fitness) < self.pMutate:
 				self.rules.append(rule1.mutate(self.pMutate))
+    			print len(self.rules)
 		randIndex1 = randrange(1,len(self.rules))
 		randIndex2 = randrange(1,len(self.rules))
 		if len(self.rules) <= self.limit:
 			rule2 = self.rules[randIndex1]
 			rule3 = self.rules[randIndex2]
-			if 1/(rule2.fitness) < self.pCross:
+			if 1/(randIndex1*rule2.fitness) < self.pCross:
 				self.rules.append(rule2.crossover(rule3))
+				print len(self.rules)
 
 	def remove(self):
 		for i in xrange(0,len(self.rules)):
@@ -89,17 +102,20 @@ class Ruleset:
 class Rule:
 	# make more flexible for rules with more features
 	# add output
-	def __init__(self, xs=None, ys=None, xop=None, yop=None, outAxis=None, outVal=None):
+	def __init__(self, xs=None, ys=None, xop=None, yop=None, outAxis=None, outVal=None, fitness=None):
 		self.xs = randrange(0,300) if xs == None else xs
 		self.ys = randrange(0,300) if ys == None else ys
 		# -1:<, 0:==, 1:>
 		self.xop = randrange(-1,2) if xop == None else xop
 		self.yop = randrange(-1,2) if yop == None else yop
 
+		# 0 for x, 1 for y
 		self.outAxis = randrange(0,2) if outAxis == None else outAxis
-		self.outVal = randrange(0,2) if outVal == None else outVal
+		self.outVal = randrange(-1,2) if outVal == None else outVal
 
-		self.fitness = 1
+		self.fitness = 1 if fitness == None else fitness
+
+		print "new rule:", self.xs, self.ys, self.xop, self.yop, self.outAxis, self.outVal
 
 	# p is probability of mutation
 	def mutate(self, p):
@@ -111,7 +127,8 @@ class Rule:
 		outAxis = self.outAxis if r != 4 else randrange(0,2)
 		outVal = self.outVal if r != 5 else randrange(0,2)
 
-		return Rule(xs,ys,xop,yop,outAxis,outVal)
+		print 'mutate'
+		return Rule(xs,ys,xop,yop,outAxis,outVal,self.fitness)
 
 	def crossover(self, partner):
 		# 0 takes from self, 1 takes from partner
@@ -129,5 +146,6 @@ class Rule:
 		outAxis = self.outAxis if outAParent == 0 else partner.outAxis
 		outVal = self.outVal if outVParent == 0 else partner.outVal
 
-		return Rule(xs,ys,xop,yop,outAxis,outVal)
+		print 'cross over'
+		return Rule(xs,ys,xop,yop,outAxis,outVal,self.fitness)
 
