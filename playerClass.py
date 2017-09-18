@@ -1,17 +1,19 @@
 import math
 
-class Player:
+class Player(object):
 	def __init__(self, x, y):
 		self.x = float(x)
 		self.y = float(y)
 
 	def moveV(self, s):
 		self.y -= s
+
 	def moveH(self, s):
 		self.x += s
 
-class Enemy(Player):
+class Enemy(Player, object):
 	def __init__(self, x, y):
+		super(Enemy,self).__init__(x,y)
 		self.x = x
 		self.y = y
 
