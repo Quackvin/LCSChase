@@ -5,11 +5,19 @@ class Player(object):
 		self.x = float(x)
 		self.y = float(y)
 
-	def moveV(self, s):
+	def moveV(self, s, maxY):
 		self.y -= s
+		if self.y > maxY:
+			self.y = maxY - 10
+		elif self.y < 0:
+			self.y = 0
 
-	def moveH(self, s):
+	def moveH(self, s, maxX):
 		self.x += s
+		if self.x > maxX:
+			self.x = maxX - 10
+		elif self.x < 0:
+			self.x = 0
 
 class Enemy(Player, object):
 	def __init__(self, x, y):

@@ -49,35 +49,47 @@ class Ruleset:
 
 		return vec
 
-	def actionRules(self, player, enemy):
+	def actionRules(self, player, enemy, maxX, maxY):
 		xDist = enemy.getXDistTo(player)
 		yDist = enemy.getYDistTo(player)
 		dist = enemy.getDistTo(player)
 
 		matchSet = self.matchRules(xDist, yDist)
 		actionVec = self.rulesVote(matchSet)
+		print actionVec
 		# add movements
 		if actionVec[0] < 0:
-			enemy.moveH(-10)
+			print 'move left'
+			enemy.moveH(-10,maxX)
 		elif actionVec[0] > 0:
-			enemy.moveH(10)
+			print 'move right'
+			enemy.moveH(10,maxX)
 		if actionVec[1] < 0:
-			enemy.moveV(-10)
+			print 'move down'
+			enemy.moveV(-10,maxY)
 		elif actionVec[1] > 0:
-			enemy.moveV(10)
+			print 'move up'
+			enemy.moveV(10,maxY)
 
 		for rule in matchSet:
+			print 'out axis:', rule.outAxis, 'action vector:', actionVec, 'out val:', rule.outVal
 			if rule.outAxis == 0 and (actionVec[0] < 0 and rule.outVal == -1) or (actionVec[0] > 0 and rule.outVal == 1) or \
-				rule.outAxis == 1 and (actionVec[1] < 0 and rule.outVal == -1) or (actionVec[1] > 0 and rule.outVal == 1):
+				rule.outAxis == 1 and (actionVec[1] < 0 and rule.outVal == -1) or (actionVec[1] > 0 and rule.outVal == 1) or \
+				rule.outVal == 0:
 				if enemy.getDistTo(player) < dist:
+					print 'fitness up'
 					rule.fitness += 1
 				else:
+					print 'fitness down'
 					rule.fitness -= 1
 
 		if len(matchSet) == 0:
 			print 'no matches'
-		fitnesses = [rule.fitness for rule in self.rules]
-		print fitnesses
+			self.remove(0.7)
+			self.GA()
+		else:
+			fitnesses = [rule.fitness for rule in self.rules]
+			print "fitnesses", fitnesses, '\n'
 
 	def GA(self):
 		randIndex = randrange(1, len(self.rules))
@@ -96,13 +108,14 @@ class Ruleset:
 				self.rules.append(rule2.crossover(rule3))
 				# print len(self.rules)
 
-	def remove(self):
+	def remove(self, p):
 		# self.rules = [rule for rule in self.rules if rule.fitness >= 0]
 		# self.rules = [rule for rule in self.rules if (float(rule.fitness)/(randrange(1,10))) > 0.1]
 		tempRules = []
 		for rule in self.rules:
 			i = randrange(1,10)
-			if float(rule.fitness)/i > 0.3:
+			survivalThesh = p
+			if float(rule.fitness)/i > survivalThesh:
 				tempRules.append(rule)
 			else:
 				print 'rule deleted'
