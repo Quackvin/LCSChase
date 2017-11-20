@@ -6,11 +6,8 @@ import rules
 screen = pygame.display.set_mode((width, height))
 pygame.display.flip()
 
-player = playerClass.Player(10, 10)
-enemy = playerClass.Enemy(40, 50)
-
-ruleset = rules.Ruleset(100, 0.9, 0.5)
-ruleset.initiliseSet()
+player = playerClass.Player(150, 150)
+enemy = playerClass.Enemy(40, 50, player)
 
 running = True
 while running:
@@ -23,26 +20,31 @@ while running:
             if event.key == pygame.K_r:
                 player = playerClass.Player(10, 10)
                 enemy = playerClass.Enemy(40, 50)
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                player.setXVel(0)
+            if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+                player.setYVel(0)
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        player.increaseVel(-1, 0)
+    if keys[pygame.K_RIGHT]:
+        player.increaseVel(1, 0)
+    if keys[pygame.K_UP]:
+        player.increaseVel(0, -1)
+    if keys[pygame.K_DOWN]:
+        player.increaseVel(0, 1)
 
-                ruleset = rules.Ruleset(50, 0.9, 0.5)
-                ruleset.initiliseSet()
-            if event.key == pygame.K_LEFT:
-                player.moveH(-10, 300)
-            if event.key == pygame.K_RIGHT:
-                player.moveH(10, 300)
-            if event.key == pygame.K_UP:
-                player.moveV(10, 300)
-            if event.key == pygame.K_DOWN:
-                player.moveV(-10, 300)
+
 
     screen.fill((50, 100, 200))
 
-    ruleset.actionRules(player, enemy, 300, 300)
-    ruleset.GA()
-    ruleset.remove(0.4)
+    player.draw(pygame, screen)
+    player.move(width, height)
+    enemy.draw(pygame, screen)
+    enemy.move(width, height)
+    enemy.createFeatureVector()
 
-    pygame.draw.rect(screen, (255, 255, 255), (player.x, player.y, 10, 10))
-    pygame.draw.rect(screen, (255, 0, 0), (enemy.x, enemy.y, 10, 10))
     pygame.display.flip()
 
 pygame.quit()
