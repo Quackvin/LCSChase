@@ -65,3 +65,9 @@ class Enemy(Player, object):
 		fv = []
 		fv.extend(self.getRelPosOf(self.target))
 		fv.extend(self.getRelVelOf(self.target))
+
+	def getDist(self, target):
+		xdiff = self.getXDistTo(target)
+		ydiff = self.getYDistTo(target)
+
+		return math.sqrt(xdiff**2 + ydiff**2)
