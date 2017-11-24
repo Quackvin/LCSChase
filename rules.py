@@ -10,18 +10,31 @@ class LCS:
         self.correctSet = []
 
         self.maxSize = 50
-        self.pCover = 0.5
+        self.pCoverWC = 0.5
         self.pMutate = 0.2
+
+        self.accFactor = 2
+        self.outcomeBinSize = 5
 
     def run(self, enemy, player):
         instance = enemy.createFeatureVector()
+
+        print 'instance: ', instance
 
         self.matchInstance(instance)
 
         if len(self.matchSet) == 0:
             self.matchSet.append(self.cover(instance))
 
+        print 'matchset length: ', len(self.matchSet)
+        print 'population length: ', len(self.population)
+        # print 'classifiers'
+        # for i in range(len(self.matchSet)):
+        #     print 'rules:', self.matchSet[i].rules, 'outcome:',self.matchSet[i].outcome
+
         outcome = self.matchSetVote()
+
+        print 'outcome', outcome
 
         oldDistance = enemy.getDist(player)
         self.executeOrder(enemy, outcome)
@@ -29,6 +42,9 @@ class LCS:
 
         # update parameters based on oldDist-newDist
 
+        self.consolidateClassifiers()
+
+        print ''
 
     def matchInstance(self, instance):
         incorrectSet = []
@@ -46,19 +62,41 @@ class LCS:
         return True
 
     def matchSetVote(self):
-        pass
+        xOutcome = [0 for i in range(self.outcomeBinSize)]
+        yOutcome = [0 for i in range(self.outcomeBinSize)]
+
+        for classifier in self.matchSet:
+            x = classifier.outcome[0]
+            y = classifier.outcome[1]
+
+            x = int(x * self.outcomeBinSize / self.accFactor)
+            y = int(y * self.outcomeBinSize / self.accFactor)
+
+            xOutcome[x] += 1
+            yOutcome[y] += 1
+
+        print 'matchset vote. x:', xOutcome, 'y:', yOutcome
+
+        return [float(max(xOutcome))*self.accFactor/self.outcomeBinSize, float(max(yOutcome))*self.accFactor/self.outcomeBinSize]
 
     def executeOrder(self, enemy, outcome): #66
-        pass
+        enemy.increaseVel(outcome[0], outcome[1])
 
     def cover(self, instance):
         randomOutcome = [] # needs 2 random numbers
-        newClassifier = classifier(randomOutcome)
+
+        # use valtobin
+
+        newClassifier = Classifier(randomOutcome)
 
         for i in range(len(instance)):
-            # randomly add # otherwise add instance[i]
-            pass
-        self.matchSet.append(newClassifier)
+            rand = randrange(100)/100
+            if rand > self.pCoverWC:
+                newClassifier.addRule('#')
+            else:
+                newClassifier.addRule(instance[i])
+
+        return newClassifier
 
     def GA(self):
         pass
@@ -82,13 +120,18 @@ class LCS:
         pass
 
     def consolidateClassifiers(self):
-        pass
+        self.population.extend(self.matchSet)
+        self.matchSet = []
 
-class classifier:
+class Classifier:
     def __init__(self, outcome):
         self.rules = []
         self.outcome = outcome
         self.binsize = 10
+
+        self.numerosity = 1
+        self.accuracy = 0
+        self.fitness = 0
 
     def addRule(self, value):
         if value == '#':
@@ -97,7 +140,7 @@ class classifier:
             self.rules.append(valueToBin(value, self.binsize))
 
     def checkRule(self, i, instVal):
-        if self.rules[i] == '#' or self.rules[i] == valueToBin(instVal):
+        if self.rules[i] == '#' or self.rules[i] == valueToBin(instVal, self.binsize):
             return True
         return False
 

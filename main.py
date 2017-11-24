@@ -8,6 +8,7 @@ pygame.display.flip()
 
 player = playerClass.Player(150, 150)
 enemy = playerClass.Enemy(40, 50, player)
+LCS = rules.LCS()
 
 running = True
 while running:
@@ -43,7 +44,8 @@ while running:
     player.move(width, height)
     enemy.draw(pygame, screen)
     enemy.move(width, height)
-    enemy.createFeatureVector()
+
+    LCS.run(enemy, player)
 
     pygame.display.flip()
 

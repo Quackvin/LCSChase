@@ -10,15 +10,24 @@ class Player(object):
 		self.maxVel = 10
 
 	def move(self, maxX, maxY):
-		self.pos = self.pos + self.vel
-		if self.pos[1] > maxY:
-			self.pos[1] = maxY - self.size
-		elif self.pos[1] < 0:
-			self.pos[1] = 0
-		if self.pos[0] > maxX:
+		if self.pos[0] + self.vel[0] + self.size > maxX:
 			self.pos[0] = maxX - self.size
-		elif self.pos[0] < 0:
+			self.vel[0] = 0
+		elif self.pos[0] + self.vel[0] < 0:
 			self.pos[0] = 0
+			self.vel[0] = 0
+		else:
+			self.pos[0] = self.pos[0] + self.vel[0]
+
+		if self.pos[1] + self.vel[1] + self.size > maxY:
+			self.pos[1] = maxY - self.size
+			self.vel[1] = 0
+		elif self.pos[1] + self.vel[1] < 0:
+			self.pos[1] = 0
+			self.vel[1] = 0
+		else:
+			self.pos[1] = self.pos[1] + self.vel[1]
+
 
 	def increaseVel(self, x, y):
 		self.vel = self.vel + [x,y]
@@ -65,6 +74,8 @@ class Enemy(Player, object):
 		fv = []
 		fv.extend(self.getRelPosOf(self.target))
 		fv.extend(self.getRelVelOf(self.target))
+
+		return fv
 
 	def getDist(self, target):
 		xdiff = self.getXDistTo(target)
