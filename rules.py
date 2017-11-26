@@ -13,7 +13,7 @@ class LCS:
         self.pCoverWC = 0.5
         self.pMutate = 0.2
 
-        self.accFactor = 2
+        self.accFactor = 5
         self.outcomeBinSize = 5
 
     def run(self, enemy, player):
@@ -28,9 +28,9 @@ class LCS:
 
         print 'matchset length: ', len(self.matchSet)
         print 'population length: ', len(self.population)
-        # print 'classifiers'
-        # for i in range(len(self.matchSet)):
-        #     print 'rules:', self.matchSet[i].rules, 'outcome:',self.matchSet[i].outcome
+        print 'classifiers'
+        for i in range(len(self.matchSet)):
+            print 'rules:', self.matchSet[i].rules, 'outcome:',self.matchSet[i].outcome
 
         outcome = self.matchSetVote()
 
@@ -62,29 +62,46 @@ class LCS:
         return True
 
     def matchSetVote(self):
-        xOutcome = [0 for i in range(self.outcomeBinSize)]
-        yOutcome = [0 for i in range(self.outcomeBinSize)]
+        xOutcome = {}
+        yOutcome = {}
 
         for classifier in self.matchSet:
-            x = classifier.outcome[0]
-            y = classifier.outcome[1]
+            x = str(classifier.outcome[0])
+            y = str(classifier.outcome[1])
 
-            x = int(x * self.outcomeBinSize / self.accFactor)
-            y = int(y * self.outcomeBinSize / self.accFactor)
-
-            xOutcome[x] += 1
-            yOutcome[y] += 1
+            if x in xOutcome.keys():
+                xOutcome[x] += 1
+            else:
+                xOutcome[x] = 1
+            if y in yOutcome.keys():
+                yOutcome[y] += 1
+            else:
+                yOutcome[y] = 1
 
         print 'matchset vote. x:', xOutcome, 'y:', yOutcome
 
-        return [float(max(xOutcome))*self.accFactor/self.outcomeBinSize, float(max(yOutcome))*self.accFactor/self.outcomeBinSize]
+        max = 0
+        x = ''
+        for key in xOutcome:
+            if xOutcome[key] > max:
+                max = xOutcome[key]
+                x = key
+        max = 0
+        y = ''
+        for key in yOutcome:
+            if yOutcome[key] > max:
+                max = yOutcome[key]
+                y = key
+
+        return [int(x), int(y)]
 
     def executeOrder(self, enemy, outcome): #66
         enemy.increaseVel(outcome[0], outcome[1])
 
     def cover(self, instance):
         randomOutcome = [] # needs 2 random numbers
-
+        randomOutcome.append(randrange(-self.accFactor, self.accFactor))
+        randomOutcome.append(randrange(-self.accFactor, self.accFactor))
         # use valtobin
 
         newClassifier = Classifier(randomOutcome)
@@ -127,7 +144,7 @@ class Classifier:
     def __init__(self, outcome):
         self.rules = []
         self.outcome = outcome
-        self.binsize = 10
+        self.binsize = 100
 
         self.numerosity = 1
         self.accuracy = 0

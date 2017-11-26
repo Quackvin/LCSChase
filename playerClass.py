@@ -82,3 +82,6 @@ class Enemy(Player, object):
 		ydiff = self.getYDistTo(target)
 
 		return math.sqrt(xdiff**2 + ydiff**2)
+
+	def draw(self, pygame, screen):
+		pygame.draw.rect(screen, (0, 0, 0), (self.pos[0], self.pos[1], self.size, self.size))
