@@ -21,6 +21,10 @@ while running:
             if event.key == pygame.K_r:
                 player = playerClass.Player(10, 10)
                 enemy = playerClass.Enemy(40, 50)
+            if event.key == pygame.K_p:
+                LCS.togglePause()
+            if event.key == pygame.K_l:
+                LCS.printPop()
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                 player.setXVel(0)
@@ -40,10 +44,10 @@ while running:
 
     screen.fill((50, 100, 200))
 
-    player.draw(pygame, screen)
     player.move(width, height)
-    enemy.draw(pygame, screen)
+    player.draw(pygame, screen)
     enemy.move(width, height)
+    enemy.draw(pygame, screen)
 
     LCS.run(enemy, player)
 

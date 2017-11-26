@@ -7,44 +7,52 @@ class LCS:
     def __init__(self):
         self.population = []
         self.matchSet = []
-        self.correctSet = []
+        self.chosenSet = []
 
         self.maxSize = 50
-        self.pCoverWC = 0.5
+        self.pCoverWC = 0.8
         self.pMutate = 0.2
 
         self.accFactor = 5
         self.outcomeBinSize = 5
 
+        self.oldDist = 0
+
+        self.pause = False
+
     def run(self, enemy, player):
-        instance = enemy.createFeatureVector()
+        if not self.pause:
+            distChange = self.oldDist - enemy.getDist(player)
+            print 'distance change: ', distChange
+            # update parameters based on oldDist-newDist
+            self.updateClassifiers(distChange)
+            self.consolidateClassifiers()
 
-        print 'instance: ', instance
+            instance = enemy.createFeatureVector()
 
-        self.matchInstance(instance)
+            print 'instance: ', instance
 
-        if len(self.matchSet) == 0:
-            self.matchSet.append(self.cover(instance))
+            self.matchInstance(instance)
 
-        print 'matchset length: ', len(self.matchSet)
-        print 'population length: ', len(self.population)
-        print 'classifiers'
-        for i in range(len(self.matchSet)):
-            print 'rules:', self.matchSet[i].rules, 'outcome:',self.matchSet[i].outcome
+            if len(self.matchSet) == 0:
+                self.matchSet.append(self.cover(instance))
 
-        outcome = self.matchSetVote()
+            print 'matchset length: ', len(self.matchSet)
+            print 'population length: ', len(self.population)
+            print 'classifiers'
+            for clsfr in self.matchSet:
+                print clsfr
 
-        print 'outcome', outcome
+            outcome = self.matchSetVote()
 
-        oldDistance = enemy.getDist(player)
-        self.executeOrder(enemy, outcome)
-        newDistance = enemy.getDist(player)
+            print 'outcome', outcome
+            print 'chosenset length: ', len(self.chosenSet)
 
-        # update parameters based on oldDist-newDist
+            self.oldDist = enemy.getDist(player)
+            self.executeOrder(enemy, outcome)
 
-        self.consolidateClassifiers()
 
-        print ''
+            print ''
 
     def matchInstance(self, instance):
         incorrectSet = []
@@ -78,7 +86,7 @@ class LCS:
             else:
                 yOutcome[y] = 1
 
-        print 'matchset vote. x:', xOutcome, 'y:', yOutcome
+        print 'matchset votes. x:', xOutcome, 'y:', yOutcome
 
         max = 0
         x = ''
@@ -93,7 +101,19 @@ class LCS:
                 max = yOutcome[key]
                 y = key
 
-        return [int(x), int(y)]
+        x = int(x)
+        y = int(y)
+
+        unchosenSet = []
+        for classifier in self.matchSet:
+            if x == classifier.outcome[0] or y == classifier.outcome[1]:
+                self.chosenSet.append(classifier)
+            else:
+                unchosenSet.append(classifier)
+
+        self.matchSet = unchosenSet
+
+        return [x, y]
 
     def executeOrder(self, enemy, outcome): #66
         enemy.increaseVel(outcome[0], outcome[1])
@@ -102,12 +122,11 @@ class LCS:
         randomOutcome = [] # needs 2 random numbers
         randomOutcome.append(randrange(-self.accFactor, self.accFactor))
         randomOutcome.append(randrange(-self.accFactor, self.accFactor))
-        # use valtobin
 
         newClassifier = Classifier(randomOutcome)
 
         for i in range(len(instance)):
-            rand = randrange(100)/100
+            rand = float(randrange(100))/100
             if rand > self.pCoverWC:
                 newClassifier.addRule('#')
             else:
@@ -133,12 +152,28 @@ class LCS:
     def subsume(self):
         pass
 
-    def updateClassifier(self):
-        pass
+    def updateClassifiers(self, distChange):
+        # update fitness
+        for classifier in self.matchSet:
+            classifier.matchCount += 1
+
+        for classifier in self.chosenSet:
+            classifier.matchCount += 1
+            classifier.fitness += distChange
 
     def consolidateClassifiers(self):
         self.population.extend(self.matchSet)
         self.matchSet = []
+
+        self.population.extend((self.chosenSet))
+        self.chosenSet = []
+
+    def printPop(self):
+        for classifier in self.population:
+            print classifier
+
+    def togglePause(self):
+        self.pause = not self.pause
 
 class Classifier:
     def __init__(self, outcome):
@@ -146,9 +181,18 @@ class Classifier:
         self.outcome = outcome
         self.binsize = 100
 
+        self.matchCount = 0
         self.numerosity = 1
-        self.accuracy = 0
         self.fitness = 0
+
+    def __str__(self):
+        s1 = 'rules: ['
+        for i in range(len(self.rules)):
+            s1 += str(self.rules[i]) + ', '
+        s1 = s1[:-2] + ']'
+        s2 = ' outcome: [' + str(self.outcome[0]) + ', ' + str(self.outcome[1]) + ']'
+        s3 = ' MC: ' + str(self.matchCount) + ' num: ' + str(self.numerosity) + ' fitness: ' + str(self.fitness)
+        return s1 + s2 + s3
 
     def addRule(self, value):
         if value == '#':

@@ -78,8 +78,8 @@ class Enemy(Player, object):
 		return fv
 
 	def getDist(self, target):
-		xdiff = self.getXDistTo(target)
-		ydiff = self.getYDistTo(target)
+		xdiff = float(self.getXDistTo(target))
+		ydiff = float(self.getYDistTo(target))
 
 		return math.sqrt(xdiff**2 + ydiff**2)
 
