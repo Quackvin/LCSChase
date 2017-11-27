@@ -7,7 +7,7 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.flip()
 
 player = playerClass.Player(150, 150)
-enemy = playerClass.Enemy(40, 50, player)
+enemy = playerClass.Enemy(40, 50, player, width, height)
 LCS = rules.LCS()
 
 running = True

@@ -47,12 +47,15 @@ class Player(object):
 
 
 class Enemy(Player, object):
-	def __init__(self, x, y, player):
+	def __init__(self, x, y, player, mapW, mapH):
 		super(Enemy, self).__init__(x, y)
 		self.pos = np.array([float(x), float(y)])
 		self.vel = np.array([0, 0])
 		self.size = 10
 		self.target = player
+
+		self.mapW = mapW
+		self.mapH = mapH
 
 	def getRelPosOf(self, target):
 		xdiff = self.getXDistTo(target)
@@ -74,6 +77,14 @@ class Enemy(Player, object):
 		fv = []
 		fv.extend(self.getRelPosOf(self.target))
 		fv.extend(self.getRelVelOf(self.target))
+		# # closeness to right wall
+		# fv.append(self.mapW - self.pos[0])
+		# # closeness to left wall
+		# fv.append(self.pos[0])
+		# # closeness to bottom wall
+		# fv.append(self.mapH - self.pos[1])
+		# # closeness to top wall
+		# fv.append(self.pos[1])
 
 		return fv
 

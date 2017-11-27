@@ -16,17 +16,22 @@ class LCS:
         self.accFactor = 5
         self.outcomeBinSize = 5
 
+        # self.targetDist = 20
+        # self.targetBonus = 1000
         self.oldDist = 0
 
         self.pause = False
 
     def run(self, enemy, player):
         if not self.pause:
-            distChange = self.oldDist - enemy.getDist(player)
+            euclidDist = enemy.getDist(player)
+            distChange = self.oldDist - euclidDist
             print 'distance change: ', distChange
             # update parameters based on oldDist-newDist
-            self.updateClassifiers(distChange)
+            self.updateClassifiers(distChange, euclidDist)
             self.consolidateClassifiers()
+
+            self.simpleDelete()
 
             instance = enemy.createFeatureVector()
 
@@ -152,14 +157,17 @@ class LCS:
     def subsume(self):
         pass
 
-    def updateClassifiers(self, distChange):
+    def updateClassifiers(self, distChange, euclidDist):
         # update fitness
         for classifier in self.matchSet:
             classifier.matchCount += 1
 
         for classifier in self.chosenSet:
             classifier.matchCount += 1
-            classifier.fitness += distChange
+            # if euclidDist < self.targetDist:
+            #     classifier.fitness = (classifier.fitness*(classifier.matchCount-1) + self.targetBonus)/classifier.matchCount
+            # else:
+            classifier.fitness = (classifier.fitness*(classifier.matchCount-1) + distChange)/classifier.matchCount
 
     def consolidateClassifiers(self):
         self.population.extend(self.matchSet)
@@ -175,11 +183,21 @@ class LCS:
     def togglePause(self):
         self.pause = not self.pause
 
+    def simpleDelete(self):
+        good = []
+        bad = []
+        for classifier in self.population:
+            if classifier.fitness <= 0:
+                bad.append(classifier)
+            else:
+                good.append(classifier)
+        self.population = good
+
 class Classifier:
     def __init__(self, outcome):
         self.rules = []
         self.outcome = outcome
-        self.binsize = 100
+        self.binsize = 30
 
         self.matchCount = 0
         self.numerosity = 1
